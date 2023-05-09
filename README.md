@@ -85,9 +85,11 @@ For older hospital records, and also for some diagnosis, the ICD9 codes were use
 
 Similarly, the data-fields using the ICD9 are: 
 
-41203	Categorical (multiple)	Diagnoses - main ICD9
-	41205-0.0	8714	Categorical (multiple)	Diagnoses - secondary ICD9
-  	41271-0.0	20302	Categorical (multiple)	Diagnoses - ICD9
+| Data-Field | Description | 
+| ---------- | ----------- |
+| 41203	     | Diagnoses - main ICD9 |
+| 41205      | Diagnoses - secondary ICD9
+| 41271      | Diagnoses - ICD9 |
 
 
 cut -f1,14961-14988,15173-1520,15957-16003
