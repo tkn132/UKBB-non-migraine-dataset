@@ -1,6 +1,6 @@
 # UK Biobank non-migraine dataset 
 
-The UK Biobank resource is extensive and the biomedical data recorded is very detailed. For complex diseases such as migraine, there is no straightforward answer like yes or no. Therefore, to have a non-migraine control cohort for future studies, we will have to go through different data fields, each with different data-coding, to hopefully remove as many samples with any migraine symptoms as possible.
+The UK Biobank resource is extensive and the biomedical data recorded is very detailed. For complex diseases such as migraine, there is no straightforward answer like yes or no. Instead, relevant information chacterizing different aspects of a subject is stored in multiple data-fields. Therefore, to have a non-migraine control cohort for future studies, we will have to go through different data fields, each with different data-coding, to hopefully remove as many samples with any migraine symptoms as possible.
 
 
 ### 01. ICD10 - WHO International Classification of Diseases
@@ -68,7 +68,7 @@ colSums(df)
 ##  G430  G431  G432  G433  G438  G439  G440  G441  G442  G443  G444  G448   R51 all
 ##   48   306    11    27   108  3958   145    15   461    21    56    94 11169	15167
 
-write.table(row.names(df[df$all==0,]), "s01.icd10.eid.txt", row.names=F, quote=F)
+write.table(row.names(df[df$all==0,]), "s01.eid.txt", row.names=F, quote=F)
 ```
 
 ### 02. ICD9
@@ -132,7 +132,7 @@ colSums(df)
 
 ## read in samples that were filtered in the icd10 step and intersect with the new icd9 list
 library(dplyr)
-icd10 = unlist(read.table("s01.icd10.eid.txt", header=T))
+icd10 = unlist(read.table("s01.eid.txt", header=T))
 new_df = df[rownames(df) %in% icd10,]
 nrow(df)
 nrow(new_df)
@@ -141,18 +141,55 @@ colSums(new_df)
 #   1    2    6    6   42  179  225
 
 ## write output
-write.table(row.names(new_df[new_df$all==0,]), "s02.icd9.eid.txt", row.names=F, quote=F)
+write.table(row.names(new_df[new_df$all==0,]), "s02.eid.txt", row.names=F, quote=F)
 ```
 
 ### 03. Data-Field 20002 - Non-cancer illness code, self-reported
 
+Now we move to another data field which is self-reported illness. Migraine and headache were encoded as 1265 and 1436, respectively for this data field. 
 
-#	Code	Meaning
-399	1265	migraine
-414	1436	headaches (not migraine)
+| Code	| Meaning |
+| ----- | ------- |
+| 1265	| migraine |
+| 1436	| headaches (not migraine) |
 
+
+```
 cut -f1,6731-6866 /mnt/work/datasets/compgen/ukbiobank/master/ukb43384.tab > s03.df20002.txt
 
-grep -w '399\|414' s03.df20002.txt > test.txt
+grep -w '1265' s03.df20002.txt | wc -l #16,105 people with migraine
+grep -w '1436' s03.df20002.txt | wc -l #4,648 people with headache
+
+grep -vw '1265\|1436' s03.df20002.txt | cut -f1 > s03.temp.txt
+
+awk 'NR==FNR { lines[$0]=1; next } $0 in lines' s03.temp.txt s02.eid.txt > s03.eid.txt ## this intersects the 2 files
+wc -l s03.eid.txt #469,208
+
+```
+
+### 04. Data field 3799 - Headaches for 3+ months
+
+The coding for this data field is as below. So we only need to remove samples answering 'yes'.  
+
+| Coding |	Meaning |
+| ------ | ------------ |
+| 1	 | Yes    |
+| 0	 | No     |
+| -1	 | Do not know |
+| -3	 | Prefer not to answer |
+
+
+```
+cut -f1,1476-1479  /mnt/work/datasets/compgen/ukbiobank/master/ukb43384.tab | awk '$2!=1 && $3!=1 && $4!=1 && $5!=1 {print $1}' > s04.temp.txt 
+awk 'NR==FNR { lines[$0]=1; next } $0 in lines' s04.temp.txt s03.eid.txt > s04.eid.txt
+wc -l s04.eid.txt #435,933
+
+```
+
+
+## Extracting genotype data
+
+
+
 
 
