@@ -27,7 +27,7 @@ Also, the ICD10 codes for headache:
 | G448	| G44.8 Other specified headache syndromes |
 | R51	  | R51 Headache
 
-The UK Biobank data fields that use the ICD10 codes are as follows. You can click on the data-fields to learn more. 
+The UK Biobank data fields that use the ICD10 codes are as below. You can click on the data-fields to learn more. 
 
 | Data-Field | Description | 
 | ---------- | ----------- |
@@ -83,7 +83,7 @@ For older hospital records, and also for some diagnosis, the ICD9 codes were use
 | 3469	| 3469 Migraine, unspecified |
 | 7840	| 7840 Headache
 
-Similarly, the data-fields using the ICD9 are: 
+Similarly, the UK Biobank data-fields using the ICD9 are: 
 
 | Data-Field | Description | 
 | ---------- | ----------- |
@@ -91,9 +91,57 @@ Similarly, the data-fields using the ICD9 are:
 | 41205      | Diagnoses - secondary ICD9
 | 41271      | Diagnoses - ICD9 |
 
+```
+cut -f1,14961-14988,15173-15202,15957-16003 /mnt/work/datasets/compgen/ukbiobank/master/ukb43384.tab > s02.icd9.txt
+```
 
-cut -f1,14961-14988,15173-1520,15957-16003
+```R
+codes <- c(3460,3461,3462,3468,3469,7840)
 
+dat <- read.table("s02.icd9.txt", header=T, stringsAsFactors = FALSE)
+head(dat[,1:5])
+#    f.eid f.41203.0.0 f.41203.0.1 f.41203.0.2 f.41203.0.3
+#1 1000011        <NA>        <NA>        <NA>        <NA>
+#2 1000026        <NA>        <NA>        <NA>        <NA>
+#3 1000032        <NA>        <NA>        <NA>        <NA>
+#4 1000044        <NA>        <NA>        <NA>        <NA>
+#5 1000058        <NA>        <NA>        <NA>        <NA>
+#6 1000060        <NA>        <NA>        <NA>        <NA>
 
+dat[is.na(dat)] <- "XXX" # change all NA into somthing else
+
+df <- as.data.frame(matrix(nrow=nrow(dat)))
+row.names(df) <- dat$f.eid	
+for (i in 1:length(codes)){
+	df[i] <- +( Reduce(`|`, lapply(dat, `==`, codes[i])))
+	}
+names(df) <- codes
+head(df)
+#        3460 3461 3462 3468 3469 7840
+#1000011    0    0    0    0    0    0
+#1000026    0    0    0    0    0    0
+#1000032    0    0    0    0    0    0
+#1000044    0    0    0    0    0    0
+#1000058    0    0    0    0    0    0
+#1000060    0    0    0    0    0    0
+
+df$all <- ifelse(rowSums(df[1:length(codes)]) >0, 1, 0)
+colSums(df)
+#3460 3461 3462 3468 3469 7840  all
+#   2    2    8    9   55  206  261
+
+## read in samples that were filtered in the icd10 step and intersect with the new icd9 list
+library(dplyr)
+icd10 = unlist(read.table("s01.icd10.eid.txt", header=T))
+new_df = df[rownames(df) %in% icd10,]
+nrow(df)
+nrow(new_df)
+colSums(new_df)
+#3460 3461 3462 3468 3469 7840  all
+#   1    2    6    6   42  179  225
+
+## write output
+write.table(row.names(new_df[new_df$all==0,]), "s02.icd9.eid.txt", row.names=F, quote=F)
+```
 
 
