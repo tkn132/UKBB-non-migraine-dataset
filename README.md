@@ -189,7 +189,7 @@ wc -l s04.eid.txt #435,933
 
 ## Extracting genotype data
 
-
+awk '{print $1, $1}' s04.eid.txt > s04.eid.plink
 
 
 
