@@ -144,4 +144,15 @@ colSums(new_df)
 write.table(row.names(new_df[new_df$all==0,]), "s02.icd9.eid.txt", row.names=F, quote=F)
 ```
 
+### 03. Data-Field 20002 - Non-cancer illness code, self-reported
+
+
+#	Code	Meaning
+399	1265	migraine
+414	1436	headaches (not migraine)
+
+cut -f1,6731-6866 /mnt/work/datasets/compgen/ukbiobank/master/ukb43384.tab > s03.df20002.txt
+
+grep -w '399\|414' s03.df20002.txt > test.txt
+
 
