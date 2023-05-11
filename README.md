@@ -188,8 +188,16 @@ wc -l s04.eid.txt #435,933
 
 
 ## Extracting genotype data
+Finally, we extract the filtered samples from the [UK Biobank imputation dataset](https://biobank.ndph.ox.ac.uk/ukb/label.cgi?id=100319). 
 
+```
 awk '{print $1, $1}' s04.eid.txt > s04.eid.plink
 
-
-
+for chr in {1..22}; do
+$plink2 --pfile /mnt/work/compgen/data/ukbiobank/geno-imputed/plink/ukb22828_c${chr}_b0_v3 \
+--keep s04.eid.plink \
+--make-bed \
+--out nonmig_ukb22828_c${chr}_b0_v3 \
+--threads 32
+done
+```
